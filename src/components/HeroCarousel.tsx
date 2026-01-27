@@ -1,23 +1,29 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Play, Star } from "lucide-react";
-import { featuredMovies, Movie } from "@/data/movies";
+import { ChevronLeft, ChevronRight, Play, Star, Loader2 } from "lucide-react";
+import { useFeaturedMovies } from "@/hooks/useMovies";
+import type { Movie } from "@/types/database";
 
-const HeroCarousel = () => {
+interface HeroCarouselProps {
+  onBookClick?: (movie: Movie) => void;
+}
+
+const HeroCarousel = ({ onBookClick }: HeroCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const { data: featuredMovies, isLoading } = useFeaturedMovies();
 
-  const currentMovie = featuredMovies[currentIndex];
+  const currentMovie = featuredMovies?.[currentIndex];
 
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || !featuredMovies?.length) return;
     
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % featuredMovies.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying]);
+  }, [isAutoPlaying, featuredMovies?.length]);
 
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
@@ -26,14 +32,32 @@ const HeroCarousel = () => {
   };
 
   const goToPrevious = () => {
+    if (!featuredMovies?.length) return;
     const newIndex = currentIndex === 0 ? featuredMovies.length - 1 : currentIndex - 1;
     goToSlide(newIndex);
   };
 
   const goToNext = () => {
+    if (!featuredMovies?.length) return;
     const newIndex = (currentIndex + 1) % featuredMovies.length;
     goToSlide(newIndex);
   };
+
+  if (isLoading) {
+    return (
+      <section className="relative h-[70vh] md:h-[85vh] w-full overflow-hidden bg-background flex items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </section>
+    );
+  }
+
+  if (!featuredMovies?.length || !currentMovie) {
+    return (
+      <section className="relative h-[70vh] md:h-[85vh] w-full overflow-hidden bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">No featured movies available</p>
+      </section>
+    );
+  }
 
   return (
     <section className="relative h-[70vh] md:h-[85vh] w-full overflow-hidden">
@@ -48,7 +72,7 @@ const HeroCarousel = () => {
           className="absolute inset-0"
         >
           <img
-            src={currentMovie.backdrop || currentMovie.poster}
+            src={currentMovie.backdrop_url || currentMovie.poster_url || '/placeholder.svg'}
             alt={currentMovie.title}
             className="w-full h-full object-cover"
           />
@@ -71,7 +95,7 @@ const HeroCarousel = () => {
           >
             {/* Genres */}
             <div className="flex flex-wrap gap-2">
-              {currentMovie.genre.map((g) => (
+              {currentMovie.genre?.map((g) => (
                 <span
                   key={g}
                   className="px-3 py-1 bg-secondary/80 backdrop-blur-sm rounded-full text-sm text-foreground font-medium"
@@ -93,7 +117,7 @@ const HeroCarousel = () => {
                 <span className="font-semibold text-foreground">{currentMovie.rating}/10</span>
               </div>
               <span>•</span>
-              <span>{currentMovie.year}</span>
+              <span>{currentMovie.release_year}</span>
               <span>•</span>
               <span>{currentMovie.duration}</span>
               <span>•</span>
@@ -109,7 +133,10 @@ const HeroCarousel = () => {
 
             {/* CTAs */}
             <div className="flex flex-wrap gap-4 pt-4">
-              <button className="flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-full font-semibold text-lg hover:bg-primary/90 transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary/30">
+              <button 
+                onClick={() => onBookClick?.(currentMovie)}
+                className="flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-full font-semibold text-lg hover:bg-primary/90 transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary/30"
+              >
                 <Play className="w-5 h-5 fill-current" />
                 Book Now
               </button>
