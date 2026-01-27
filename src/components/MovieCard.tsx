@@ -1,13 +1,19 @@
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
-import { Movie } from "@/data/movies";
+import type { Movie } from "@/types/database";
 
 interface MovieCardProps {
   movie: Movie;
   index: number;
+  onBookClick?: (movie: Movie) => void;
 }
 
-const MovieCard = ({ movie, index }: MovieCardProps) => {
+const MovieCard = ({ movie, index, onBookClick }: MovieCardProps) => {
+  const handleBookClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onBookClick?.(movie);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -20,7 +26,7 @@ const MovieCard = ({ movie, index }: MovieCardProps) => {
         {/* Poster */}
         <div className="relative aspect-[2/3] overflow-hidden">
           <img
-            src={movie.poster}
+            src={movie.poster_url || '/placeholder.svg'}
             alt={movie.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
@@ -36,7 +42,10 @@ const MovieCard = ({ movie, index }: MovieCardProps) => {
 
           {/* Hover Content */}
           <div className="absolute inset-0 flex items-end p-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
-            <button className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors transform translate-y-4 group-hover:translate-y-0">
+            <button 
+              onClick={handleBookClick}
+              className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors transform translate-y-4 group-hover:translate-y-0"
+            >
               Book Now
             </button>
           </div>
@@ -50,7 +59,7 @@ const MovieCard = ({ movie, index }: MovieCardProps) => {
           
           {/* Genres */}
           <div className="flex flex-wrap gap-1">
-            {movie.genre.slice(0, 2).map((g) => (
+            {movie.genre?.slice(0, 2).map((g) => (
               <span
                 key={g}
                 className="text-xs px-2 py-0.5 bg-secondary rounded-full text-muted-foreground"
