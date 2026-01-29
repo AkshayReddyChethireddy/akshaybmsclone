@@ -59,6 +59,32 @@ export interface Preference {
   updated_at: string;
 }
 
+export interface Theater {
+  id: string;
+  name: string;
+  location: string;
+  city: string;
+  total_screens: number;
+  amenities: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Showtime {
+  id: string;
+  movie_id: string;
+  theater_id: string;
+  show_time: string;
+  show_date: string;
+  screen_number: number;
+  available_seats: number;
+  price_modifier: number;
+  created_at: string;
+  updated_at: string;
+  // Joined fields
+  theater?: Theater;
+}
+
 // Insert types
 export type ProfileInsert = Partial<Profile> & { id: string };
 export type MovieInsert = Partial<Movie> & { title: string };
