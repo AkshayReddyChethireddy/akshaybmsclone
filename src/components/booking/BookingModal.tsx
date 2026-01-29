@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, Users, CreditCard, Loader2, Check, MapPin, ChevronLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { getTheatersWithShowtimes, formatShowTime } from '@/data/theaters';
+import SeatSelector from './SeatSelector';
 import type { Movie, Showtime, Theater } from '@/types/database';
 
 interface BookingModalProps {
@@ -13,13 +14,14 @@ interface BookingModalProps {
   movie: Movie | null;
 }
 
-type BookingStep = 'theaters' | 'details' | 'payment' | 'success';
+type BookingStep = 'theaters' | 'seats' | 'details' | 'payment' | 'success';
 
 const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
   const [step, setStep] = useState<BookingStep>('theaters');
   const [selectedTheater, setSelectedTheater] = useState<Theater | null>(null);
   const [selectedShowtime, setSelectedShowtime] = useState<Showtime | null>(null);
   const [seats, setSeats] = useState(1);
+  const [selectedSeatNumbers, setSelectedSeatNumbers] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
 
@@ -32,6 +34,35 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
     return getTheatersWithShowtimes(movie.id);
   }, [movie?.id]);
 
+  // Generate random filled seats for demo (seeded by showtime id for consistency)
+  const filledSeats = useMemo(() => {
+    if (!selectedShowtime) return [];
+    // Use showtime id to seed random filled seats
+    const seed = selectedShowtime.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const totalSeats = selectedShowtime.available_seats + 30; // Some seats are filled
+    const filledCount = 30 + (seed % 20); // 30-50 filled seats
+    
+    const filled: number[] = [];
+    const random = (n: number) => ((seed * (n + 1) * 9301 + 49297) % 233280) / 233280;
+    
+    for (let i = 0; i < filledCount; i++) {
+      const seat = Math.floor(random(i) * totalSeats) + 1;
+      if (!filled.includes(seat)) {
+        filled.push(seat);
+      }
+    }
+    return filled;
+  }, [selectedShowtime?.id]);
+
+  const totalSeatsInTheater = useMemo(() => {
+    if (!selectedShowtime) return 80;
+    return selectedShowtime.available_seats + filledSeats.length;
+  }, [selectedShowtime, filledSeats]);
+
+  const handleSeatsSelected = useCallback((seatNumbers: number[]) => {
+    setSelectedSeatNumbers(seatNumbers);
+  }, []);
+
   if (!movie) return null;
 
   const basePrice = movie.price;
@@ -41,6 +72,19 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
   const handleSelectShowtime = (theater: Theater, showtime: Showtime) => {
     setSelectedTheater(theater);
     setSelectedShowtime(showtime);
+    setSelectedSeatNumbers([]);
+    setStep('seats');
+  };
+
+  const handleConfirmSeats = () => {
+    if (selectedSeatNumbers.length !== seats) {
+      toast({
+        title: 'Select all seats',
+        description: `Please select exactly ${seats} seat${seats > 1 ? 's' : ''}.`,
+        variant: 'destructive',
+      });
+      return;
+    }
     setStep('details');
   };
 
@@ -48,13 +92,18 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
     setStep('theaters');
     setSelectedTheater(null);
     setSelectedShowtime(null);
+    setSelectedSeatNumbers([]);
+  };
+
+  const handleBackToSeats = () => {
+    setStep('seats');
   };
 
   const handleBooking = async () => {
-    if (!selectedShowtime) {
+    if (!selectedShowtime || selectedSeatNumbers.length !== seats) {
       toast({
-        title: 'Select a showtime',
-        description: 'Please select a theater and showtime to continue.',
+        title: 'Select seats',
+        description: 'Please select your seats to continue.',
         variant: 'destructive',
       });
       return;
@@ -139,8 +188,30 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
     setSelectedTheater(null);
     setSelectedShowtime(null);
     setSeats(1);
+    setSelectedSeatNumbers([]);
     setBookingId(null);
     onClose();
+  };
+
+  const getBackHandler = () => {
+    switch (step) {
+      case 'seats':
+        return handleBackToTheaters;
+      case 'details':
+        return handleBackToSeats;
+      case 'payment':
+        return () => setStep('details');
+      default:
+        return undefined;
+    }
+  };
+
+  const rowLabels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const seatsPerRow = 8;
+  const formatSeatLabel = (seatNum: number) => {
+    const row = Math.floor((seatNum - 1) / seatsPerRow);
+    const col = ((seatNum - 1) % seatsPerRow) + 1;
+    return `${rowLabels[row]}${col}`;
   };
 
   return (
@@ -174,9 +245,9 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
               >
                 <X className="w-5 h-5" />
               </button>
-              {step !== 'theaters' && step !== 'success' && (
+              {getBackHandler() && (
                 <button
-                  onClick={handleBackToTheaters}
+                  onClick={getBackHandler()}
                   className="absolute top-3 left-3 p-2 bg-background/80 backdrop-blur-sm text-foreground rounded-full hover:bg-background transition-colors flex items-center gap-1"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -198,6 +269,32 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                   <h2 className="font-display text-2xl font-bold text-foreground">
                     Theaters Showing {movie.title}
                   </h2>
+                  
+                  {/* Seat count selector */}
+                  <div className="p-4 bg-secondary/50 rounded-xl border border-border">
+                    <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-3">
+                      <Users className="w-4 h-4" />
+                      How many tickets?
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setSeats(Math.max(1, seats - 1))}
+                        className="w-10 h-10 rounded-lg bg-background text-foreground font-bold hover:bg-background/80 border border-border"
+                      >
+                        -
+                      </button>
+                      <span className="w-12 text-center font-bold text-xl text-foreground">{seats}</span>
+                      <button
+                        onClick={() => setSeats(Math.min(10, seats + 1))}
+                        className="w-10 h-10 rounded-lg bg-background text-foreground font-bold hover:bg-background/80 border border-border"
+                      >
+                        +
+                      </button>
+                      <span className="text-sm text-muted-foreground ml-2">
+                        ticket{seats > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
                   
                   <div className="space-y-4">
                     {theatersWithShowtimes.map(({ theater, showtimes }) => (
@@ -249,8 +346,8 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                 </div>
               )}
 
-              {/* Step: Booking Details */}
-              {step === 'details' && (
+              {/* Step: Seat Selection */}
+              {step === 'seats' && (
                 <div className="space-y-6">
                   {/* Selected Theater & Time */}
                   <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
@@ -270,26 +367,54 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                     </div>
                   </div>
 
-                  {/* Seats */}
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-3">
-                      <Users className="w-4 h-4" />
-                      Number of Seats
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setSeats(Math.max(1, seats - 1))}
-                        className="w-10 h-10 rounded-lg bg-secondary text-foreground font-bold hover:bg-secondary/80"
-                      >
-                        -
-                      </button>
-                      <span className="w-12 text-center font-bold text-xl text-foreground">{seats}</span>
-                      <button
-                        onClick={() => setSeats(Math.min(10, seats + 1))}
-                        className="w-10 h-10 rounded-lg bg-secondary text-foreground font-bold hover:bg-secondary/80"
-                      >
-                        +
-                      </button>
+                  <h3 className="font-display text-lg font-bold text-foreground text-center">
+                    Select {seats} Seat{seats > 1 ? 's' : ''}
+                  </h3>
+
+                  <SeatSelector
+                    totalSeats={totalSeatsInTheater}
+                    filledSeats={filledSeats}
+                    requiredSeats={seats}
+                    onSeatsSelected={handleSeatsSelected}
+                  />
+
+                  <button
+                    onClick={handleConfirmSeats}
+                    disabled={selectedSeatNumbers.length !== seats}
+                    className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {selectedSeatNumbers.length === seats 
+                      ? 'Confirm Seats' 
+                      : `Select ${seats - selectedSeatNumbers.length} more seat${seats - selectedSeatNumbers.length > 1 ? 's' : ''}`
+                    }
+                  </button>
+                </div>
+              )}
+
+              {/* Step: Booking Details */}
+              {step === 'details' && (
+                <div className="space-y-6">
+                  {/* Selected Theater & Time */}
+                  <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                    <div className="flex items-center gap-2 text-primary mb-1">
+                      <MapPin className="w-4 h-4" />
+                      <span className="font-semibold">{selectedTheater?.name}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{selectedTheater?.location}</p>
+                    <div className="flex items-center gap-4 mt-2 text-sm">
+                      <span className="flex items-center gap-1 text-foreground">
+                        <Clock className="w-4 h-4 text-primary" />
+                        {selectedShowtime && formatShowTime(selectedShowtime.show_time)}
+                      </span>
+                      <span className="text-muted-foreground">
+                        Screen {selectedShowtime?.screen_number}
+                      </span>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-primary/20">
+                      <span className="text-sm text-muted-foreground">Seats: </span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {selectedSeatNumbers.sort((a, b) => a - b).map(formatSeatLabel).join(', ')}
+                      </span>
                     </div>
                   </div>
 
@@ -383,7 +508,9 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                       {selectedShowtime && formatShowTime(selectedShowtime.show_time)} • Screen {selectedShowtime?.screen_number}
                     </p>
                     <p className="text-sm text-muted-foreground mt-2">Seats</p>
-                    <p className="font-semibold text-foreground">{seats}</p>
+                    <p className="font-semibold text-foreground">
+                      {selectedSeatNumbers.sort((a, b) => a - b).map(formatSeatLabel).join(', ')}
+                    </p>
                   </div>
                   <button
                     onClick={handleClose}
