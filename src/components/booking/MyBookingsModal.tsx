@@ -14,11 +14,11 @@ const MyBookingsModal = ({ isOpen, onClose }: MyBookingsModalProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
-        return 'bg-green-500/20 text-green-500';
+        return 'bg-success/20 text-success';
       case 'pending':
-        return 'bg-yellow-500/20 text-yellow-500';
+        return 'bg-rating/20 text-rating';
       case 'cancelled':
-        return 'bg-red-500/20 text-red-500';
+        return 'bg-destructive/20 text-destructive';
       default:
         return 'bg-secondary text-muted-foreground';
     }

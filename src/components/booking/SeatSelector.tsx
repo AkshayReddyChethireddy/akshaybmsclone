@@ -81,8 +81,8 @@ const SeatSelector = ({ totalSeats, filledSeats, requiredSeats, onSeatsSelected 
                         : status === 'selected'
                           ? 'bg-primary text-primary-foreground border-2 border-primary shadow-lg shadow-primary/30'
                           : isDisabled
-                            ? 'border-2 border-green-500/50 text-green-500/50 cursor-not-allowed'
-                            : 'border-2 border-green-500 text-green-500 hover:bg-green-500/10 cursor-pointer'
+                            ? 'border-2 border-success/50 text-success/50 cursor-not-allowed'
+                            : 'border-2 border-success text-success hover:bg-success/10 cursor-pointer'
                       }
                     `}
                   >
@@ -103,8 +103,8 @@ const SeatSelector = ({ totalSeats, filledSeats, requiredSeats, onSeatsSelected 
       {/* Legend */}
       <div className="flex justify-center gap-6 pt-4 border-t border-border mt-4">
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded border-2 border-green-500 flex items-center justify-center">
-            <span className="text-[8px] text-green-500">1</span>
+          <div className="w-5 h-5 rounded border-2 border-success flex items-center justify-center">
+            <span className="text-[8px] text-success">1</span>
           </div>
           <span className="text-xs text-muted-foreground">Available</span>
         </div>
