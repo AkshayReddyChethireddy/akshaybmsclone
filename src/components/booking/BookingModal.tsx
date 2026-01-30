@@ -1,14 +1,16 @@
 import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Clock, Users, CreditCard, Loader2, Check, MapPin, ChevronLeft, Smartphone, Building } from 'lucide-react';
+import { X, Clock, Users, CreditCard, Loader2, Check, MapPin, ChevronLeft, Smartphone, Building, CalendarDays } from 'lucide-react';
+import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { getTheatersWithShowtimes, formatShowTime } from '@/data/theaters';
+import { getTheatersWithShowtimesForDate, getAvailableDates, formatShowTime } from '@/data/theaters';
 import SeatSelector from './SeatSelector';
+import DateSelector from './DateSelector';
 import type { Movie, Showtime, Theater } from '@/types/database';
 
 interface BookingModalProps {
@@ -32,15 +34,22 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [upiId, setUpiId] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  });
+
+  const availableDates = useMemo(() => getAvailableDates(), []);
 
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Get theaters with showtimes for this movie
+  // Get theaters with showtimes for this movie and selected date
   const theatersWithShowtimes = useMemo(() => {
     if (!movie) return [];
-    return getTheatersWithShowtimes(movie.id);
-  }, [movie?.id]);
+    return getTheatersWithShowtimesForDate(movie.id, selectedDate);
+  }, [movie?.id, selectedDate]);
 
   // Generate random filled seats for demo (seeded by showtime id for consistency)
   const filledSeats = useMemo(() => {
@@ -133,15 +142,10 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
     setLoading(true);
 
     try {
-      // Create showtime date
+      // Create showtime date using selected date and showtime
       const [hours, minutes] = selectedShowtime!.show_time.split(':');
-      const showTimeDate = new Date();
+      const showTimeDate = new Date(selectedDate);
       showTimeDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-      
-      // If the showtime has passed today, set it for tomorrow
-      if (showTimeDate < new Date()) {
-        showTimeDate.setDate(showTimeDate.getDate() + 1);
-      }
 
       // Create booking with pending status
       const { data: booking, error: bookingError } = await supabase
@@ -203,6 +207,9 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
     setCardExpiry('');
     setCardCvv('');
     setUpiId('');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    setSelectedDate(today);
     onClose();
   };
 
@@ -334,6 +341,25 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                       </span>
                     </div>
                   </div>
+
+                  {/* Date selector */}
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <CalendarDays className="w-4 h-4" />
+                      Select Date
+                    </label>
+                    <DateSelector
+                      dates={availableDates}
+                      selectedDate={selectedDate}
+                      onSelectDate={setSelectedDate}
+                    />
+                  </div>
+
+                  {/* Show selected date info */}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Showing theaters for:</span>
+                    <span className="font-semibold text-primary">{format(selectedDate, 'EEEE, MMMM d, yyyy')}</span>
+                  </div>
                   
                   <div className="space-y-4">
                     {theatersWithShowtimes.map(({ theater, showtimes }) => (
@@ -395,7 +421,11 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                       <span className="font-semibold">{selectedTheater?.name}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">{selectedTheater?.location}</p>
-                    <div className="flex items-center gap-4 mt-2 text-sm">
+                    <div className="flex items-center gap-4 mt-2 text-sm flex-wrap">
+                      <span className="flex items-center gap-1 text-foreground">
+                        <CalendarDays className="w-4 h-4 text-primary" />
+                        {format(selectedDate, 'EEE, MMM d')}
+                      </span>
                       <span className="flex items-center gap-1 text-foreground">
                         <Clock className="w-4 h-4 text-primary" />
                         {selectedShowtime && formatShowTime(selectedShowtime.show_time)}
@@ -440,7 +470,11 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                       <span className="font-semibold">{selectedTheater?.name}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">{selectedTheater?.location}</p>
-                    <div className="flex items-center gap-4 mt-2 text-sm">
+                    <div className="flex items-center gap-4 mt-2 text-sm flex-wrap">
+                      <span className="flex items-center gap-1 text-foreground">
+                        <CalendarDays className="w-4 h-4 text-primary" />
+                        {format(selectedDate, 'EEE, MMM d')}
+                      </span>
                       <span className="flex items-center gap-1 text-foreground">
                         <Clock className="w-4 h-4 text-primary" />
                         {selectedShowtime && formatShowTime(selectedShowtime.show_time)}
@@ -503,6 +537,10 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Theater</span>
                         <span className="text-foreground">{selectedTheater?.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Date</span>
+                        <span className="text-foreground">{format(selectedDate, 'EEE, MMM d, yyyy')}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Show Time</span>
@@ -694,6 +732,10 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Location</span>
                           <span className="text-foreground text-sm">{selectedTheater?.location}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Date</span>
+                          <span className="text-foreground">{format(selectedDate, 'EEE, MMM d, yyyy')}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Show Time</span>
