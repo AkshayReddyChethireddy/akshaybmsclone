@@ -36,7 +36,8 @@
     --input: 0 0% 18%;
     --ring: 356 100% 50%;
 
-    --radius: 0.75rem;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
 
     /* Custom tokens */
     --gradient-hero: linear-gradient(180deg, hsl(0 0% 4% / 0) 0%, hsl(0 0% 4%) 100%);
@@ -74,6 +75,8 @@
     --border: 0 0% 18%;
     --input: 0 0% 18%;
     --ring: 356 100% 50%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
     --sidebar-background: 0 0% 6%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 356 100% 50%;
