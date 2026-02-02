@@ -165,16 +165,28 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
 
       setBookingId(booking.id);
 
-      // Simulate payment delay (2 seconds)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Process payment through secure backend edge function
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
 
-      // Update booking to paid
-      const { error: updateError } = await supabase
-        .from('bookings')
-        .update({ payment_status: 'paid' })
-        .eq('id', booking.id);
+      if (!accessToken) {
+        throw new Error('No authentication session found');
+      }
 
-      if (updateError) throw updateError;
+      const paymentResponse = await supabase.functions.invoke('process-payment', {
+        body: {
+          booking_id: booking.id,
+          payment_method: paymentMethod,
+        },
+      });
+
+      if (paymentResponse.error) {
+        throw new Error(paymentResponse.error.message || 'Payment processing failed');
+      }
+
+      if (!paymentResponse.data?.success) {
+        throw new Error(paymentResponse.data?.error || 'Payment was not successful');
+      }
 
       // Mock email notification - show toast
       toast({
