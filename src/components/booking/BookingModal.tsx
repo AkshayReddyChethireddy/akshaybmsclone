@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { getTheatersWithShowtimesForDate, getAvailableDates, formatShowTime } from '@/data/theaters';
+import { getSafeErrorMessage } from '@/lib/errorMessages';
 import SeatSelector from './SeatSelector';
 import DateSelector from './DateSelector';
 import type { Movie, Showtime, Theater } from '@/types/database';
@@ -195,11 +196,11 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
       });
 
       setStep('success');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Booking error:', error);
       toast({
         title: 'Booking failed',
-        description: error.message || 'Something went wrong. Please try again.',
+        description: getSafeErrorMessage(error),
         variant: 'destructive',
       });
     } finally {
