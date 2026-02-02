@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, User, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { getSafeAuthErrorMessage } from '@/lib/errorMessages';
 import { z } from 'zod';
 
 interface AuthModalProps {
@@ -61,9 +62,10 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
         const { error } = await signUp(formData.email, formData.password, formData.fullName);
         if (error) {
+          console.error('Sign up error:', error);
           toast({
             title: 'Sign up failed',
-            description: error.message,
+            description: getSafeAuthErrorMessage(error),
             variant: 'destructive',
           });
         } else {
@@ -89,9 +91,10 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
         const { error } = await signIn(formData.email, formData.password);
         if (error) {
+          console.error('Sign in error:', error);
           toast({
             title: 'Sign in failed',
-            description: error.message,
+            description: getSafeAuthErrorMessage(error),
             variant: 'destructive',
           });
         } else {
