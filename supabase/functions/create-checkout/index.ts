@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
       line_items: [
         {
           price_data: {
-            currency: 'inr',
+            currency: 'usd',
             product_data: {
               name: `${movie_title} - Movie Ticket`,
               description: `${seats} seat(s) at ${theater_name || 'Theater'} | ${show_time || ''}`,
