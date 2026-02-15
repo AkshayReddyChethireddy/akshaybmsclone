@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Loader2, XCircle } from 'lucide-react';
+import { Check, Loader2, XCircle, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -27,13 +27,11 @@ const PaymentSuccess = () => {
         const { data, error } = await supabase.functions.invoke('verify-payment', {
           body: { session_id: sessionId, booking_id: bookingId },
         });
-
         if (error || !data?.success) {
           setStatus('error');
           setMessage('Payment verification failed. Please contact support.');
           return;
         }
-
         setStatus('success');
         setMessage('Payment successful! Your booking is confirmed.');
       } catch {
@@ -42,9 +40,7 @@ const PaymentSuccess = () => {
       }
     };
 
-    if (user) {
-      verifyPayment();
-    }
+    if (user) verifyPayment();
   }, [searchParams, user]);
 
   return (
@@ -52,43 +48,36 @@ const PaymentSuccess = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-center space-y-6"
+        className="max-w-md w-full glass-strong rounded-2xl p-8 text-center space-y-6"
       >
         {status === 'verifying' && (
           <>
             <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
-            <h1 className="font-display text-2xl font-bold text-foreground">Verifying Payment</h1>
-            <p className="text-muted-foreground">{message}</p>
+            <h1 className="font-display text-2xl font-black text-foreground">Verifying Payment</h1>
+            <p className="text-muted-foreground text-sm">{message}</p>
           </>
         )}
-
         {status === 'success' && (
           <>
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="w-20 h-20 mx-auto bg-primary/20 rounded-full flex items-center justify-center"
-            >
-              <Check className="w-10 h-10 text-primary" />
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-20 h-20 mx-auto bg-gradient-to-br from-primary to-gold-dark rounded-full flex items-center justify-center glow-gold">
+              <Check className="w-10 h-10 text-primary-foreground" />
             </motion.div>
-            <h1 className="font-display text-2xl font-bold text-foreground">Booking Confirmed!</h1>
-            <p className="text-muted-foreground">{message}</p>
+            <h1 className="font-display text-2xl font-black text-foreground">Booking Confirmed!</h1>
+            <p className="text-muted-foreground text-sm">{message}</p>
           </>
         )}
-
         {status === 'error' && (
           <>
             <XCircle className="w-16 h-16 mx-auto text-destructive" />
-            <h1 className="font-display text-2xl font-bold text-foreground">Payment Issue</h1>
-            <p className="text-muted-foreground">{message}</p>
+            <h1 className="font-display text-2xl font-black text-foreground">Payment Issue</h1>
+            <p className="text-muted-foreground text-sm">{message}</p>
           </>
         )}
-
         <button
           onClick={() => navigate('/')}
-          className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+          className="w-full py-3.5 bg-gradient-to-r from-primary to-gold-dark text-primary-foreground rounded-xl font-bold hover:shadow-lg transition-all"
         >
-          Back to Home
+          Back to Cinelux
         </button>
       </motion.div>
     </div>

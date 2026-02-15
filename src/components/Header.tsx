@@ -1,4 +1,4 @@
-import { Search, Menu, X, User, LogOut, Ticket } from "lucide-react";
+import { Search, Menu, X, LogOut, Ticket, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,8 +26,7 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
   const navLinks = [
     { name: "Movies", href: "#movies" },
     { name: "Events", href: "#events" },
-    { name: "Plays", href: "#plays" },
-    { name: "Sports", href: "#sports" },
+    { name: "Coming Soon", href: "#coming-soon" },
   ];
 
   const handleSignOut = async () => {
@@ -36,31 +35,26 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
-    return name
-      .split(" ")
-      .map(n => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 glass-strong">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <motion.div 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2.5"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <span className="font-display font-bold text-primary-foreground text-xl">B</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-gold-dark flex items-center justify-center shadow-lg glow-gold">
+                <Sparkles className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-display font-bold text-xl md:text-2xl text-foreground">
-                Book<span className="text-primary">My</span>Show
+              <span className="font-display font-extrabold text-xl md:text-2xl text-gradient-gold tracking-tight">
+                CINELUX
               </span>
             </motion.div>
 
@@ -70,7 +64,7 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
                 <motion.a
                   key={link.name}
                   href={link.href}
-                  className="text-muted-foreground hover:text-foreground transition-colors font-medium"
+                  className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm uppercase tracking-wider"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -91,22 +85,22 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search movies..."
+                  placeholder="Search movies, events..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 pl-10 pr-4 py-2 bg-secondary rounded-full text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                  className="w-64 pl-10 pr-4 py-2.5 glass rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
                 />
               </div>
 
               {loading ? (
-                <div className="w-24 h-10 bg-secondary rounded-full animate-pulse" />
+                <div className="w-24 h-10 skeleton-loading rounded-xl" />
               ) : user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 px-3 py-1.5 bg-secondary rounded-full hover:bg-secondary/80 transition-colors">
-                      <Avatar className="w-8 h-8">
+                    <button className="flex items-center gap-2 px-3 py-1.5 glass rounded-xl hover:border-primary/30 transition-all">
+                      <Avatar className="w-8 h-8 ring-2 ring-primary/30">
                         <AvatarImage src={profile?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-gold-dark text-primary-foreground text-sm font-bold">
                           {getInitials(profile?.full_name)}
                         </AvatarFallback>
                       </Avatar>
@@ -115,7 +109,7 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
                       </span>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuContent align="end" className="w-48 glass-strong">
                     <DropdownMenuItem onClick={onMyBookingsClick} className="cursor-pointer">
                       <Ticket className="w-4 h-4 mr-2" />
                       My Bookings
@@ -130,7 +124,7 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
               ) : (
                 <button 
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="px-6 py-2 bg-primary text-primary-foreground rounded-full font-semibold hover:bg-primary/90 transition-colors"
+                  className="px-6 py-2.5 bg-gradient-to-r from-primary to-gold-dark text-primary-foreground rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all text-sm"
                 >
                   Sign In
                 </button>
@@ -154,10 +148,9 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-background border-t border-border"
+              className="md:hidden glass-strong border-t border-border/50"
             >
               <div className="container mx-auto px-4 py-4 space-y-4">
-                {/* Mobile Search */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
@@ -165,17 +158,15 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
                     placeholder="Search movies..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-secondary rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full pl-10 pr-4 py-3 glass rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                 </div>
-
-                {/* Mobile Nav Links */}
-                <nav className="flex flex-col gap-2">
+                <nav className="flex flex-col gap-1">
                   {navLinks.map((link) => (
                     <a
                       key={link.name}
                       href={link.href}
-                      className="px-4 py-3 text-foreground hover:bg-secondary rounded-lg transition-colors font-medium"
+                      className="px-4 py-3 text-foreground hover:bg-primary/10 rounded-xl transition-colors font-medium"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {link.name}
@@ -183,24 +174,20 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
                   ))}
                   {user && (
                     <button
-                      onClick={() => {
-                        onMyBookingsClick?.();
-                        setIsMenuOpen(false);
-                      }}
-                      className="px-4 py-3 text-foreground hover:bg-secondary rounded-lg transition-colors font-medium text-left flex items-center gap-2"
+                      onClick={() => { onMyBookingsClick?.(); setIsMenuOpen(false); }}
+                      className="px-4 py-3 text-foreground hover:bg-primary/10 rounded-xl transition-colors font-medium text-left flex items-center gap-2"
                     >
                       <Ticket className="w-4 h-4" />
                       My Bookings
                     </button>
                   )}
                 </nav>
-
                 {user ? (
-                  <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
+                  <div className="flex items-center justify-between p-4 glass rounded-xl">
                     <div className="flex items-center gap-3">
-                      <Avatar className="w-10 h-10">
+                      <Avatar className="w-10 h-10 ring-2 ring-primary/30">
                         <AvatarImage src={profile?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary text-primary-foreground">
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-gold-dark text-primary-foreground">
                           {getInitials(profile?.full_name)}
                         </AvatarFallback>
                       </Avatar>
@@ -209,20 +196,14 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
                         <p className="text-sm text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
-                    <button
-                      onClick={handleSignOut}
-                      className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                    >
+                    <button onClick={handleSignOut} className="p-2 text-destructive hover:bg-destructive/10 rounded-xl transition-colors">
                       <LogOut className="w-5 h-5" />
                     </button>
                   </div>
                 ) : (
                   <button 
-                    onClick={() => {
-                      setIsAuthModalOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+                    onClick={() => { setIsAuthModalOpen(true); setIsMenuOpen(false); }}
+                    className="w-full py-3 bg-gradient-to-r from-primary to-gold-dark text-primary-foreground rounded-xl font-semibold hover:shadow-lg transition-all"
                   >
                     Sign In
                   </button>
@@ -232,7 +213,6 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
           )}
         </AnimatePresence>
       </header>
-
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </>
   );

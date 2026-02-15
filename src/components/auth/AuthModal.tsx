@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { X, Mail, Lock, User, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getSafeAuthErrorMessage } from '@/lib/errorMessages';
@@ -29,12 +29,7 @@ const signUpSchema = z.object({
 const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const [formData, setFormData] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { signIn, signUp } = useAuth();
@@ -50,67 +45,37 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         const result = signUpSchema.safeParse(formData);
         if (!result.success) {
           const fieldErrors: Record<string, string> = {};
-          result.error.errors.forEach(err => {
-            if (err.path[0]) {
-              fieldErrors[err.path[0] as string] = err.message;
-            }
-          });
+          result.error.errors.forEach(err => { if (err.path[0]) fieldErrors[err.path[0] as string] = err.message; });
           setErrors(fieldErrors);
           setLoading(false);
           return;
         }
-
         const { error } = await signUp(formData.email, formData.password, formData.fullName);
         if (error) {
-          console.error('Sign up error:', error);
-          toast({
-            title: 'Sign up failed',
-            description: getSafeAuthErrorMessage(error),
-            variant: 'destructive',
-          });
+          toast({ title: 'Sign up failed', description: getSafeAuthErrorMessage(error), variant: 'destructive' });
         } else {
-          toast({
-            title: 'Account created!',
-            description: 'Please check your email to verify your account.',
-          });
+          toast({ title: 'Account created!', description: 'Welcome to Cinelux!' });
           onClose();
         }
       } else {
         const result = signInSchema.safeParse(formData);
         if (!result.success) {
           const fieldErrors: Record<string, string> = {};
-          result.error.errors.forEach(err => {
-            if (err.path[0]) {
-              fieldErrors[err.path[0] as string] = err.message;
-            }
-          });
+          result.error.errors.forEach(err => { if (err.path[0]) fieldErrors[err.path[0] as string] = err.message; });
           setErrors(fieldErrors);
           setLoading(false);
           return;
         }
-
         const { error } = await signIn(formData.email, formData.password);
         if (error) {
-          console.error('Sign in error:', error);
-          toast({
-            title: 'Sign in failed',
-            description: getSafeAuthErrorMessage(error),
-            variant: 'destructive',
-          });
+          toast({ title: 'Sign in failed', description: getSafeAuthErrorMessage(error), variant: 'destructive' });
         } else {
-          toast({
-            title: 'Welcome back!',
-            description: 'You have successfully signed in.',
-          });
+          toast({ title: 'Welcome back!', description: 'Enjoy your Cinelux experience.' });
           onClose();
         }
       }
-    } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Error', description: 'Something went wrong. Please try again.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -118,15 +83,15 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    if (errors[e.target.name]) {
-      setErrors(prev => ({ ...prev, [e.target.name]: '' }));
-    }
+    if (errors[e.target.name]) setErrors(prev => ({ ...prev, [e.target.name]: '' }));
   };
 
   const resetForm = () => {
     setFormData({ fullName: '', email: '', password: '', confirmPassword: '' });
     setErrors({});
   };
+
+  const inputClass = "w-full pl-11 pr-4 py-3.5 glass rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm";
 
   return (
     <AnimatePresence>
@@ -142,130 +107,74 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-md glass-strong rounded-2xl shadow-2xl overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border">
-              <h2 className="font-display text-2xl font-bold text-foreground">
-                {isSignUp ? 'Create Account' : 'Welcome Back'}
-              </h2>
-              <button
-                onClick={onClose}
-                className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-secondary transition-colors"
-              >
+            <div className="flex items-center justify-between p-6 border-b border-border/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-primary to-gold-dark rounded-xl">
+                  <Sparkles className="w-4 h-4 text-primary-foreground" />
+                </div>
+                <h2 className="font-display text-xl font-black text-foreground">
+                  {isSignUp ? 'Join Cinelux' : 'Welcome Back'}
+                </h2>
+              </div>
+              <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground rounded-xl hover:bg-secondary transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {isSignUp && (
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">
-                    Full Name
-                  </label>
+                  <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wider">Full Name</label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <input
-                      type="text"
-                      name="fullName"
-                      value={formData.fullName}
-                      onChange={handleInputChange}
-                      placeholder="John Doe"
-                      className="w-full pl-11 pr-4 py-3 bg-secondary rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="John Doe" className={inputClass} />
                   </div>
-                  {errors.fullName && (
-                    <p className="mt-1 text-sm text-destructive">{errors.fullName}</p>
-                  )}
+                  {errors.fullName && <p className="mt-1 text-xs text-destructive">{errors.fullName}</p>}
                 </div>
               )}
-
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Email
-                </label>
+                <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wider">Email</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="you@example.com"
-                    className="w-full pl-11 pr-4 py-3 bg-secondary rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="you@example.com" className={inputClass} />
                 </div>
-                {errors.email && (
-                  <p className="mt-1 text-sm text-destructive">{errors.email}</p>
-                )}
+                {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email}</p>}
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Password
-                </label>
+                <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wider">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="••••••••"
-                    className="w-full pl-11 pr-4 py-3 bg-secondary rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                  <input type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="••••••••" className={inputClass} />
                 </div>
-                {errors.password && (
-                  <p className="mt-1 text-sm text-destructive">{errors.password}</p>
-                )}
+                {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password}</p>}
               </div>
-
               {isSignUp && (
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">
-                    Confirm Password
-                  </label>
+                  <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wider">Confirm Password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      placeholder="••••••••"
-                      className="w-full pl-11 pr-4 py-3 bg-secondary rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange} placeholder="••••••••" className={inputClass} />
                   </div>
-                  {errors.confirmPassword && (
-                    <p className="mt-1 text-sm text-destructive">{errors.confirmPassword}</p>
-                  )}
+                  {errors.confirmPassword && <p className="mt-1 text-xs text-destructive">{errors.confirmPassword}</p>}
                 </div>
               )}
-
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-gradient-to-r from-primary to-gold-dark text-primary-foreground rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading && <Loader2 className="w-5 h-5 animate-spin" />}
                 {isSignUp ? 'Create Account' : 'Sign In'}
               </button>
             </form>
 
-            {/* Footer */}
             <div className="p-6 pt-0 text-center">
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSignUp(!isSignUp);
-                    resetForm();
-                  }}
-                  className="text-primary hover:underline font-medium"
-                >
+                <button type="button" onClick={() => { setIsSignUp(!isSignUp); resetForm(); }} className="text-primary hover:underline font-semibold">
                   {isSignUp ? 'Sign In' : 'Sign Up'}
                 </button>
               </p>
