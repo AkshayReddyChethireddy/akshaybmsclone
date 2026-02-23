@@ -67,9 +67,13 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
 
   if (!movie) return null;
 
+  const PLATFORM_FEE = 0.25;
   const basePrice = movie.price;
   const priceModifier = selectedShowtime?.price_modifier || 1;
-  const totalPrice = Math.round(basePrice * priceModifier * seats);
+  const ticketPrice = Math.round(basePrice * priceModifier);
+  const ticketSubtotal = ticketPrice * seats;
+  const platformFee = +(PLATFORM_FEE * seats).toFixed(2);
+  const totalPrice = +(ticketSubtotal + platformFee).toFixed(2);
 
   const handleSelectShowtime = (theater: Theater, showtime: Showtime) => {
     setSelectedTheater(theater);
@@ -115,7 +119,7 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
           movie_id: movie.id,
           show_time: showTimeDate.toISOString(),
           seats,
-          total_price: totalPrice,
+          total_price: Math.round(totalPrice),
           payment_status: 'pending',
         })
         .select()
@@ -333,8 +337,8 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
 
                   <div className="p-4 glass rounded-2xl">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-muted-foreground">Price per ticket</span>
-                      <span className="text-sm font-bold text-foreground">${Math.round(basePrice * priceModifier)}</span>
+                      <span className="text-xs text-muted-foreground">Base ticket price</span>
+                      <span className="text-sm font-bold text-foreground">${ticketPrice}</span>
                     </div>
                     {priceModifier > 1 && (
                       <div className="flex justify-between items-center mt-1">
@@ -342,12 +346,20 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                       </div>
                     )}
                     <div className="flex justify-between items-center mt-2">
-                      <span className="text-xs text-muted-foreground">Seats</span>
+                      <span className="text-xs text-muted-foreground">Quantity</span>
                       <span className="text-sm text-foreground">×{seats}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-xs text-muted-foreground">Ticket subtotal</span>
+                      <span className="text-sm text-foreground">${ticketSubtotal}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-xs text-muted-foreground">Platform fee ($0.25 × {seats})</span>
+                      <span className="text-sm text-foreground">${platformFee.toFixed(2)}</span>
                     </div>
                     <div className="border-t border-border/50 mt-3 pt-3 flex justify-between items-center">
                       <span className="font-bold text-foreground">Total</span>
-                      <span className="font-black text-xl text-gradient-gold">${totalPrice}</span>
+                      <span className="font-black text-xl text-gradient-gold">${totalPrice.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -385,9 +397,19 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                         <span className="text-muted-foreground">Seats</span>
                         <span className="font-mono text-foreground">{selectedSeatNumbers.sort((a, b) => a - b).map(formatSeatLabel).join(', ')}</span>
                       </div>
-                      <div className="border-t border-border/50 mt-3 pt-3 flex justify-between items-center">
-                        <span className="font-bold text-foreground">Total</span>
-                        <span className="font-black text-xl text-gradient-gold">${totalPrice}</span>
+                      <div className="border-t border-border/50 mt-3 pt-3 space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Tickets ({seats} × ${ticketPrice})</span>
+                          <span className="text-foreground">${ticketSubtotal}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Platform fee</span>
+                          <span className="text-foreground">${platformFee.toFixed(2)}</span>
+                        </div>
+                        <div className="border-t border-border/50 pt-2 flex justify-between items-center">
+                          <span className="font-bold text-foreground">Total</span>
+                          <span className="font-black text-xl text-gradient-gold">${totalPrice.toFixed(2)}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -410,7 +432,7 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                     {loading ? (
                       <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Stripe...</>
                     ) : (
-                      <><CreditCard className="w-5 h-5" /> Pay ${totalPrice} with Stripe</>
+                      <><CreditCard className="w-5 h-5" /> Pay ${totalPrice.toFixed(2)} with Stripe</>
                     )}
                   </button>
 
@@ -457,9 +479,19 @@ const BookingModal = ({ isOpen, onClose, movie }: BookingModalProps) => {
                         <div className="flex justify-between"><span className="text-muted-foreground">Time</span><span className="text-foreground">{selectedShowtime && formatShowTime(selectedShowtime.show_time)}</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">Seats</span><span className="font-mono font-bold text-foreground">{selectedSeatNumbers.sort((a, b) => a - b).map(formatSeatLabel).join(', ')}</span></div>
                       </div>
-                      <div className="border-t border-border/50 pt-4 flex justify-between items-center">
-                        <span className="font-bold text-foreground">Total Paid</span>
-                        <span className="font-black text-2xl text-gradient-gold">${totalPrice}</span>
+                      <div className="border-t border-border/50 pt-4 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Tickets ({seats} × ${ticketPrice})</span>
+                          <span className="text-foreground">${ticketSubtotal}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Platform fee</span>
+                          <span className="text-foreground">${platformFee.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center pt-1">
+                          <span className="font-bold text-foreground">Total Paid</span>
+                          <span className="font-black text-2xl text-gradient-gold">${totalPrice.toFixed(2)}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
