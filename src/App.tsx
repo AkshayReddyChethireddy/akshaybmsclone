@@ -10,6 +10,7 @@ import MovieDetail from "./pages/MovieDetail";
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
+import TheatersPage from "./pages/TheatersPage";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/movie/:id" element={<MovieDetail />} />
+              <Route path="/theaters" element={<TheatersPage />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-cancelled" element={<PaymentCancelled />} />
               <Route path="*" element={<NotFound />} />

@@ -35,6 +35,7 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
     { name: "Movies", href: "#movies" },
     { name: "Coming Soon", href: "#coming-soon" },
     { name: "Popular", href: "#popular" },
+    { name: "Theaters", href: "/theaters" },
   ];
 
   const getInitials = (name: string | null | undefined) => {
@@ -96,18 +97,22 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
-              {navLinks.map((link, index) => (
-                <motion.a
-                  key={link.name}
-                  href={link.href}
-                  className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm uppercase tracking-wider"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                >
-                  {link.name}
-                </motion.a>
-              ))}
+              {navLinks.map((link, index) => {
+                const isRoute = link.href.startsWith('/');
+                return (
+                  <motion.a
+                    key={link.name}
+                    href={isRoute ? undefined : link.href}
+                    onClick={isRoute ? () => navigate(link.href) : undefined}
+                    className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm uppercase tracking-wider cursor-pointer"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
+                    {link.name}
+                  </motion.a>
+                );
+              })}
             </nav>
 
             {/* Search & Auth - Desktop */}
@@ -211,11 +216,22 @@ const Header = ({ onMyBookingsClick }: HeaderProps) => {
                   <input type="text" placeholder="Search movies..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 glass rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
                 </div>
                 <nav className="flex flex-col gap-1">
-                  {navLinks.map((link) => (
-                    <a key={link.name} href={link.href} className="px-4 py-3 text-foreground hover:bg-primary/10 rounded-xl transition-colors font-medium" onClick={() => setIsMenuOpen(false)}>
-                      {link.name}
-                    </a>
-                  ))}
+                  {navLinks.map((link) => {
+                    const isRoute = link.href.startsWith('/');
+                    return (
+                      <a
+                        key={link.name}
+                        href={isRoute ? undefined : link.href}
+                        onClick={(e) => {
+                          if (isRoute) { e.preventDefault(); navigate(link.href); }
+                          setIsMenuOpen(false);
+                        }}
+                        className="px-4 py-3 text-foreground hover:bg-primary/10 rounded-xl transition-colors font-medium cursor-pointer"
+                      >
+                        {link.name}
+                      </a>
+                    );
+                  })}
                   {user && (
                     <button onClick={() => { onMyBookingsClick?.(); setIsMenuOpen(false); }} className="px-4 py-3 text-foreground hover:bg-primary/10 rounded-xl transition-colors font-medium text-left flex items-center gap-2">
                       <Ticket className="w-4 h-4" /> My Bookings
