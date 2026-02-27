@@ -23,6 +23,8 @@ export type Database = {
           payment_status: string | null
           seats: number
           show_time: string
+          showtime_id: string | null
+          theater_id: string | null
           total_price: number
           updated_at: string | null
           user_id: string
@@ -35,6 +37,8 @@ export type Database = {
           payment_status?: string | null
           seats?: number
           show_time: string
+          showtime_id?: string | null
+          theater_id?: string | null
           total_price: number
           updated_at?: string | null
           user_id: string
@@ -47,6 +51,8 @@ export type Database = {
           payment_status?: string | null
           seats?: number
           show_time?: string
+          showtime_id?: string | null
+          theater_id?: string | null
           total_price?: number
           updated_at?: string | null
           user_id?: string
@@ -57,6 +63,20 @@ export type Database = {
             columns: ["movie_id"]
             isOneToOne: false
             referencedRelation: "movies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_showtime_id_fkey"
+            columns: ["showtime_id"]
+            isOneToOne: false
+            referencedRelation: "showtimes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_theater_id_fkey"
+            columns: ["theater_id"]
+            isOneToOne: false
+            referencedRelation: "theaters"
             referencedColumns: ["id"]
           },
         ]
@@ -115,6 +135,59 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          booking_id: string
+          created_at: string | null
+          currency: string
+          id: string
+          idempotency_key: string | null
+          metadata: Json | null
+          platform_fee: number
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          created_at?: string | null
+          currency?: string
+          id?: string
+          idempotency_key?: string | null
+          metadata?: Json | null
+          platform_fee?: number
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          created_at?: string | null
+          currency?: string
+          id?: string
+          idempotency_key?: string | null
+          metadata?: Json | null
+          platform_fee?: number
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       preferences: {
         Row: {
           created_at: string | null
@@ -172,12 +245,311 @@ export type Database = {
         }
         Relationships: []
       }
+      screens: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          screen_type: string
+          seats_per_row: number
+          theater_id: string
+          total_rows: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          screen_type?: string
+          seats_per_row?: number
+          theater_id: string
+          total_rows?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          screen_type?: string
+          seats_per_row?: number
+          theater_id?: string
+          total_rows?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screens_theater_id_fkey"
+            columns: ["theater_id"]
+            isOneToOne: false
+            referencedRelation: "theaters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seat_locks: {
+        Row: {
+          expires_at: string
+          id: string
+          locked_at: string
+          released: boolean | null
+          seat_id: string
+          showtime_id: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string
+          id?: string
+          locked_at?: string
+          released?: boolean | null
+          seat_id: string
+          showtime_id: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string
+          id?: string
+          locked_at?: string
+          released?: boolean | null
+          seat_id?: string
+          showtime_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seat_locks_seat_id_fkey"
+            columns: ["seat_id"]
+            isOneToOne: false
+            referencedRelation: "seats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seat_locks_showtime_id_fkey"
+            columns: ["showtime_id"]
+            isOneToOne: false
+            referencedRelation: "showtimes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seats: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          price: number
+          row_label: string
+          screen_id: string
+          seat_number: number
+          tier: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          price?: number
+          row_label: string
+          screen_id: string
+          seat_number: number
+          tier?: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          price?: number
+          row_label?: string
+          screen_id?: string
+          seat_number?: number
+          tier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seats_screen_id_fkey"
+            columns: ["screen_id"]
+            isOneToOne: false
+            referencedRelation: "screens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      showtimes: {
+        Row: {
+          created_at: string | null
+          end_time: string | null
+          id: string
+          is_active: boolean | null
+          movie_id: string
+          price_modifier: number | null
+          screen_id: string
+          show_date: string
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          is_active?: boolean | null
+          movie_id: string
+          price_modifier?: number | null
+          screen_id: string
+          show_date: string
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          is_active?: boolean | null
+          movie_id?: string
+          price_modifier?: number | null
+          screen_id?: string
+          show_date?: string
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showtimes_movie_id_fkey"
+            columns: ["movie_id"]
+            isOneToOne: false
+            referencedRelation: "movies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showtimes_screen_id_fkey"
+            columns: ["screen_id"]
+            isOneToOne: false
+            referencedRelation: "screens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      theaters: {
+        Row: {
+          address: string
+          amenities: string[] | null
+          city: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          latitude: number
+          longitude: number
+          name: string
+          phone: string | null
+          state: string
+          updated_at: string | null
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          amenities?: string[] | null
+          city: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          latitude: number
+          longitude: number
+          name: string
+          phone?: string | null
+          state: string
+          updated_at?: string | null
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          amenities?: string[] | null
+          city?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          latitude?: number
+          longitude?: number
+          name?: string
+          phone?: string | null
+          state?: string
+          updated_at?: string | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      tickets: {
+        Row: {
+          booking_id: string
+          created_at: string | null
+          id: string
+          qr_code: string
+          scanned_at: string | null
+          seat_id: string
+          showtime_id: string
+          status: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string | null
+          id?: string
+          qr_code: string
+          scanned_at?: string | null
+          seat_id: string
+          showtime_id: string
+          status?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string | null
+          id?: string
+          qr_code?: string
+          scanned_at?: string | null
+          seat_id?: string
+          showtime_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_seat_id_fkey"
+            columns: ["seat_id"]
+            isOneToOne: false
+            referencedRelation: "seats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_showtime_id_fkey"
+            columns: ["showtime_id"]
+            isOneToOne: false
+            referencedRelation: "showtimes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_available_seats: {
+        Args: { p_showtime_id: string }
+        Returns: {
+          is_booked: boolean
+          is_locked: boolean
+          price: number
+          row_label: string
+          seat_id: string
+          seat_number: number
+          tier: string
+        }[]
+      }
+      release_expired_locks: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never

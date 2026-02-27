@@ -6,7 +6,22 @@ import TheaterDirectory from '@/components/theaters/TheaterDirectory';
 import TheaterFilters from '@/components/theaters/TheaterFilters';
 import MyBookingsModal from '@/components/booking/MyBookingsModal';
 import { useNowPlaying } from '@/hooks/useTMDB';
-import { usTheaters, theaterShowsMovie, type USTheater } from '@/data/usTheaters';
+import { useDBTheaters, type DBTheater } from '@/hooks/useTheaterDB';
+
+// Adapt DB theater to the USTheater interface used by existing components
+const adaptTheater = (t: DBTheater) => ({
+  id: t.id,
+  name: t.name,
+  address: t.address,
+  city: t.city,
+  state: t.state,
+  zip: t.zip_code,
+  lat: t.latitude,
+  lng: t.longitude,
+  screens: 3, // Each theater has 3 screens seeded
+  formats: ['Standard', 'IMAX', 'Dolby Atmos'],
+  amenities: t.amenities || [],
+});
 
 const TheatersPage = () => {
   const [selectedTheaterId, setSelectedTheaterId] = useState<string | null>(null);
@@ -24,10 +39,12 @@ const TheatersPage = () => {
 
   const { data: nowPlaying } = useNowPlaying();
   const movies = nowPlaying?.results || [];
+  
+  const { data: dbTheaters = [] } = useDBTheaters();
+  const theaters = useMemo(() => dbTheaters.map(adaptTheater), [dbTheaters]);
 
   const filteredTheaters = useMemo(() => {
-    return usTheaters.filter((t: USTheater) => {
-      // Text search
+    return theaters.filter((t) => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         if (
@@ -38,15 +55,11 @@ const TheatersPage = () => {
           !t.address.toLowerCase().includes(q)
         ) return false;
       }
-      // Format filter
       if (selectedFormats.length > 0 && !selectedFormats.some(f => t.formats.includes(f))) return false;
-      // Amenities filter
       if (selectedAmenities.length > 0 && !selectedAmenities.some(a => t.amenities.includes(a))) return false;
-      // Movie filter
-      if (selectedMovieId && !theaterShowsMovie(t.id, selectedMovieId, selectedDate)) return false;
       return true;
     });
-  }, [searchQuery, selectedFormats, selectedAmenities, selectedMovieId, selectedDate]);
+  }, [theaters, searchQuery, selectedFormats, selectedAmenities]);
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -95,7 +108,6 @@ const TheatersPage = () => {
             selectedTheaterId={selectedTheaterId}
             onSelectTheater={(id) => {
               setSelectedTheaterId(id);
-              // On mobile, switch to map when selecting a theater
               if (window.innerWidth < 768) {
                 setViewMode('map');
               }
